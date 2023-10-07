@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import missingno as msno
 import scipy.stats as stats
+import numpy as np
 
 
 def split_nominal_and_numerical(a_df: pd.DataFrame, a_target_attr_list: list) -> (list, list):
