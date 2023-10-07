@@ -125,6 +125,17 @@ def print_corr_of_num_attrs(a_df: pd.DataFrame, a_num_attr_list: list, method: s
         _ = get_correlation_data_frame(a_df, a_num_attr_list, method=method, corr_threshold=corr_threshold)
 
 
+def print_pair_plot(a_df: pd.DataFrame, a_num_attr_list: list) -> None:
+    print('investigate multi co-linearity: pair plots of the numerical attributes:\n')
+    if a_df[a_num_attr_list].shape[1] < 20:
+        sns.pairplot(a_df[a_num_attr_list], height=1)
+        plt.tight_layout()
+        plt.show()
+    else:
+        print(f'\nSkip pair plots - {a_df[a_num_attr_list].shape[1]} attributes is too many for a useful visual '
+              f'output.', sep='')
+
+
 def drop_obs_with_nans(a_df: pd.DataFrame) -> pd.DataFrame:
     if a_df.isna().sum().sum() > 0:
         print(f'\nfound observations with nans - pre obs. drop a_df.shape: {a_df.shape}')
