@@ -60,11 +60,6 @@ def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, 
         msno.heatmap(a_df.sample(sample_size, random_state=42))
         plt.show()
 
-        print('\n',
-              f'nullity correlation using the {nullity_corr_method} method with corr row threshold {nullity_corr_threshold}')
-        _ = get_flattened_corr_matrix(a_df.isnull().corr(method=nullity_corr_method),
-                                      corr_threshold=nullity_corr_threshold)
-
     else:
         print('\nno missing values in data set.')
 
