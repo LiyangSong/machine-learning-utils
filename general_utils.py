@@ -10,6 +10,13 @@ def load_csv_into_df(a_path: str) -> pd.DataFrame:
     return a_df
 
 
+def drop_na_target_obs(a_df: pd.DataFrame, target_attr: list) -> pd.DataFrame:
+    print('\nDrop missing target observations:\n')
+    a_df = a_df.dropna(subset=target_attr)
+    print("data shape after drop: ", a_df.shape)
+    return a_df
+
+
 def split_train_test_df(a_df: pd.DataFrame, test_size: float = 0.2, random_state: int = 42) -> (
         pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame):
 
