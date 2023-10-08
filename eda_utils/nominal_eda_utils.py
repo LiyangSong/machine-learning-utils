@@ -17,7 +17,7 @@ def explore_cardinality_of_cat_attrs(a_df: pd.DataFrame, a_cat_attr_list: list) 
         print('a_df[attr].value_counts(dropna=False):\n', a_df[attr].value_counts(dropna=False))
 
 
-def drop_cat_with_lt_n_instances(a_df, attr, a_target_attr, n):
+def drop_cat_with_lt_n_instances(a_df: pd.DataFrame, attr: str, a_target_attr: str, n) -> pd.DataFrame:
     print(f'\nCheck category counts and drop categories with count < {n}\n')
 
     cat_drop_list = []
@@ -32,33 +32,34 @@ def drop_cat_with_lt_n_instances(a_df, attr, a_target_attr, n):
     return a_df
 
 
-def do_kruskal_wallis(a_df, attr, a_target_attr):
+def do_kruskal_wallis(a_df: pd.DataFrame, a_cat_attr_list: list, a_target_attr: str) -> None:
     print(f'\nPerform the kruskal-wallis test to understand if there is a difference in {a_target_attr} means between the categories:\n')
 
-    a_df = a_df.loc[:, [attr, a_target_attr]]
-    a_df = drop_cat_with_lt_n_instances(a_df, attr, a_target_attr, 5)
+    for attr in a_cat_attr_list:
+        a_df = a_df.loc[:, [attr, a_target_attr]]
+        a_df = drop_cat_with_lt_n_instances(a_df, attr, a_target_attr, 5)
 
-    groups = [a_df.loc[a_df[attr] == group, a_target_attr].values for group in a_df[attr].unique()]
-    results = stats.kruskal(*groups)
+        groups = [a_df.loc[a_df[attr] == group, a_target_attr].values for group in a_df[attr].unique()]
+        results = stats.kruskal(*groups)
 
-    kruskal_wallis_alpha = 0.05
-    dunns_test_alpha = 0.05
-    if results.pvalue < kruskal_wallis_alpha:
+        kruskal_wallis_alpha = 0.05
+        dunns_test_alpha = 0.05
+        if results.pvalue < kruskal_wallis_alpha:
 
-        print(f'\n   kruskal-wallis p-value: {results.pvalue}')
-        print(f'   at least one mean is different then the others at alpha = {kruskal_wallis_alpha} level - conduct '
-              f'the dunn\'s test')
+            print(f'\n   kruskal-wallis p-value: {results.pvalue}')
+            print(f'   at least one mean is different then the others at alpha = {kruskal_wallis_alpha} level - conduct '
+                  f'the dunn\'s test')
 
-        results = posthoc_dunn(a_df, val_col=a_target_attr, group_col=attr, p_adjust='bonferroni')
+            results = posthoc_dunn(a_df, val_col=a_target_attr, group_col=attr, p_adjust='bonferroni')
 
-        sym_matrix_df = general_utils.convert_symmetric_matrix_to_df(results, 'p_value')
+            sym_matrix_df = general_utils.convert_symmetric_matrix_to_df(results, 'p_value')
 
-        sym_matrix_df = sym_matrix_df[sym_matrix_df.p_value < dunns_test_alpha]
+            sym_matrix_df = sym_matrix_df[sym_matrix_df.p_value < dunns_test_alpha]
 
-        print(f'\ndunn\'s test results:')
-        print(sym_matrix_df)
-    else:
-        print(f'   differences in means are not significant at alpha = {kruskal_wallis_alpha} level')
+            print(f'\ndunn\'s test results:')
+            print(sym_matrix_df)
+        else:
+            print(f'   differences in means are not significant at alpha = {kruskal_wallis_alpha} level')
 
 
 def print_cat_plots(a_df, a_cat_attr_list, a_target_attr, a_kinds_list, num_unique_levels_threshold=18,
@@ -98,6 +99,3 @@ def print_cat_plots(a_df, a_cat_attr_list, a_target_attr, a_kinds_list, num_uniq
         plt.xticks(rotation=90)
         plt.grid()
         plt.show()
-
-        # kruskal-wallis
-        do_kruskal_wallis(a_df, attr, a_target_attr)

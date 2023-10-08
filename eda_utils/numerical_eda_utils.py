@@ -156,7 +156,6 @@ def tukeys_method(a_df: pd.DataFrame, variable: str) -> (list, list):
     for index, x in zip(a_df.index, a_df[variable]):
         if x <= outer_fence_le or x >= outer_fence_ue:
             outliers_prob.append(index)
-    for index, x in zip(a_df.index, a_df[variable]):
         if x <= inner_fence_le or x >= inner_fence_ue:
             outliers_poss.append(index)
 
