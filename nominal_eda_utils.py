@@ -17,12 +17,12 @@ def explore_cardinality_of_cat_attrs(a_df: pd.DataFrame, a_cat_attr_list: list) 
         print('a_df[attr].value_counts(dropna=False):\n', a_df[attr].value_counts(dropna=False))
 
 
-def drop_cat_with_lt_n_instances(a_df: pd.DataFrame, attr: str, a_target_attr: str, n) -> pd.DataFrame:
+def drop_cat_with_lt_n_instances(a_df: pd.DataFrame, attr: str, n) -> pd.DataFrame:
     print(f'\nCheck {attr} category counts and drop categories with count < {n}\n')
 
     cat_drop_list = []
     for category in a_df[attr].unique():
-        value_count = a_df.loc[a_df[attr] == category, a_target_attr].shape[0]
+        value_count = a_df.loc[a_df[attr] == category].shape[0]
         if value_count < n:
             print(f'   category {category} has value count = {value_count} - drop it')
             cat_drop_list.append(category)
@@ -37,7 +37,7 @@ def do_kruskal_wallis(a_df: pd.DataFrame, a_cat_attr_list: list, a_target_attr: 
 
     for attr in a_cat_attr_list:
         a_df_attr = a_df.loc[:, [attr, a_target_attr]]
-        a_df_attr = drop_cat_with_lt_n_instances(a_df_attr, attr, a_target_attr, 5)
+        a_df_attr = drop_cat_with_lt_n_instances(a_df_attr, attr, 5)
 
         groups = [a_df_attr.loc[a_df_attr[attr] == group, a_target_attr].values for group in a_df[attr].unique()]
         results = stats.kruskal(*groups)
