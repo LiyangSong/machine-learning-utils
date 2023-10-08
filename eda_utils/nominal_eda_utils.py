@@ -36,10 +36,10 @@ def do_kruskal_wallis(a_df: pd.DataFrame, a_cat_attr_list: list, a_target_attr: 
     print(f'\nPerform the kruskal-wallis test to understand if there is a difference in {a_target_attr} means between the categories:\n')
 
     for attr in a_cat_attr_list:
-        a_df = a_df.loc[:, [attr, a_target_attr]]
-        a_df = drop_cat_with_lt_n_instances(a_df, attr, a_target_attr, 5)
+        a_df_attr = a_df.loc[:, [attr, a_target_attr]]
+        a_df_attr = drop_cat_with_lt_n_instances(a_df_attr, attr, a_target_attr, 5)
 
-        groups = [a_df.loc[a_df[attr] == group, a_target_attr].values for group in a_df[attr].unique()]
+        groups = [a_df_attr.loc[a_df_attr[attr] == group, a_target_attr].values for group in a_df[attr].unique()]
         results = stats.kruskal(*groups)
 
         kruskal_wallis_alpha = 0.05
@@ -50,7 +50,7 @@ def do_kruskal_wallis(a_df: pd.DataFrame, a_cat_attr_list: list, a_target_attr: 
             print(f'   at least one mean is different then the others at alpha = {kruskal_wallis_alpha} level - conduct '
                   f'the dunn\'s test')
 
-            results = posthoc_dunn(a_df, val_col=a_target_attr, group_col=attr, p_adjust='bonferroni')
+            results = posthoc_dunn(a_df_attr, val_col=a_target_attr, group_col=attr, p_adjust='bonferroni')
 
             sym_matrix_df = general_utils.convert_symmetric_matrix_to_df(results, 'p_value')
 
