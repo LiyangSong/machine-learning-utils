@@ -21,7 +21,7 @@ def check_for_duplicate_obs(a_df: pd.DataFrame) -> None:
 
 def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, verbose: bool = True) -> None:
     print('=' * 60)
-    print('\nCheck out missingness:\n')
+    print('Check out missingness:')
     print('=' * 60)
 
     if verbose:
@@ -59,7 +59,9 @@ def drop_obs_with_nans(a_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def check_out_skew_and_kurtosis(a_df: pd.DataFrame) -> None:
-    print('\nCheck out skewness and kurtosis:\n')
+    print('=' * 60)
+    print('Check out skewness and kurtosis:')
+    print('=' * 60)
     for attr in a_df.columns:
         print('\nattr: ', attr)
         print(f'kurtosis: {a_df[attr].kurtosis()}')
@@ -68,7 +70,7 @@ def check_out_skew_and_kurtosis(a_df: pd.DataFrame) -> None:
 
 def check_out_target_distribution(a_df: pd.DataFrame, a_target_attr: list) -> None:
     print('=' * 60)
-    print('\nCheck out target distribution:\n')
+    print('Check out target distribution:')
     print('=' * 60)
 
     print('\na_df[a_target_attr].describe():')
