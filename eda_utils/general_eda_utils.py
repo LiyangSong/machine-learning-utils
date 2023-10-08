@@ -5,7 +5,7 @@ import scipy.stats as stats
 
 
 def check_for_duplicate_obs(a_df: pd.DataFrame) -> None:
-    print('\nCheck for duplicate observations:')
+    print('\nCheck for duplicate observations:\n')
 
     dedup_a_df = a_df.drop_duplicates()
     print('a_df.shape:', a_df.shape)
@@ -18,7 +18,7 @@ def check_for_duplicate_obs(a_df: pd.DataFrame) -> None:
 
 
 def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, verbose: bool = True) -> None:
-    print('\nCheck out missingness:')
+    print('\nCheck out missingness:\n')
 
     if verbose:
         print('\nNA (np.nan or None) count - a_df[an_attr_list].isna().sum():\n', a_df.isna().sum())
@@ -46,7 +46,7 @@ def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, 
 
 
 def drop_obs_with_nans(a_df: pd.DataFrame) -> pd.DataFrame:
-    print('drop_obs_with_nans:')
+    print('drop_obs_with_nans:\n')
     if a_df.isna().sum().sum() > 0:
         print(f'\nfound observations with nans - pre obs. drop a_df.shape: {a_df.shape}')
         a_df = a_df.dropna(axis=0, how='any')
@@ -55,7 +55,7 @@ def drop_obs_with_nans(a_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def check_out_skew_and_kurtosis(a_df: pd.DataFrame) -> None:
-    print('\nCheck out skewness and kurtosis:')
+    print('\nCheck out skewness and kurtosis:\n')
     for attr in a_df.columns:
         print('\nattr: ', attr)
         print(f'kurtosis: {a_df[attr].kurtosis()}')
@@ -63,7 +63,7 @@ def check_out_skew_and_kurtosis(a_df: pd.DataFrame) -> None:
 
 
 def check_out_target_distribution(a_df: pd.DataFrame, a_target_attr: list) -> None:
-    print('\nCheck out target distribution:')
+    print('\nCheck out target distribution:\n')
     print('\na_df[a_target_attr].describe():\n', a_df[a_target_attr].describe(), '\n')
     a_df[a_target_attr].hist()
     plt.grid()
@@ -74,7 +74,7 @@ def check_out_target_distribution(a_df: pd.DataFrame, a_target_attr: list) -> No
 
 
 def check_out_target_imbalance(a_df, a_target_attr):
-    print('\nCheck out target imbalance:')
+    print('\nCheck out target imbalance:\n')
 
     print(f'\nnumber of classes in target attribute: {a_df[a_target_attr].nunique()}')
     print(f'\nclasses in target attribute: {a_df[a_target_attr].unique()}')
@@ -82,7 +82,7 @@ def check_out_target_imbalance(a_df, a_target_attr):
 
 
 def split_nominal_and_numerical_attr(a_df: pd.DataFrame, a_target_attr_list: list) -> (list, list):
-    print('\nSplit nominal and numerical attr:')
+    print('\nSplit nominal and numerical attr:\n')
 
     a_df = a_df.drop(columns=a_target_attr_list)
     a_numerical_attr_list = a_df.select_dtypes(include=['number']).columns.tolist()
