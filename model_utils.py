@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.inspection import permutation_importance
 from sklearn.metrics import r2_score, mean_squared_error
 import numpy as np
 from sklearn.base import clone
@@ -12,7 +13,7 @@ import collections
 
 
 def plot_pred_vs_actual(predicted: pd.DataFrame, train_y_df: pd.DataFrame, estimator_name: str = ''):
-    print('\nPlot prediction versus actual target values:\n')
+    print('Plot prediction versus actual target values:\n')
 
     relative_rmse = mean_squared_error(train_y_df, predicted, squared=False) / train_y_df.mean()
 
@@ -41,8 +42,10 @@ def plot_pred_vs_actual(predicted: pd.DataFrame, train_y_df: pd.DataFrame, estim
 def check_pred_performance(predicted: pd.DataFrame, train_y_df: pd.DataFrame,
                            model_selection_stage='', estimator_name='',
                            data_set_type=''):
-
-    print(f'{model_selection_stage} {estimator_name} estimator prediction performance on the {data_set_type} data set: ')
+    print('=' * 60)
+    print(f'Check {model_selection_stage} {estimator_name} estimator prediction performance on the {data_set_type} data set: ')
+    print('=' * 60)
+    print('\n')
 
     plot_pred_vs_actual(predicted, train_y_df, estimator_name)
 
@@ -70,8 +73,10 @@ def model_assess_with_bootstrapping(a_best_model, a_num_bs_samples, a_train_cap_
     import warnings
     warnings.filterwarnings("ignore", message='')
 
-    print('\n', '*' * 80, sep='')
-    print('model assessment with bootstrapping:', an_estimator_name)
+    print('=' * 60)
+    print('Model assessment with bootstrapping:', an_estimator_name)
+    print('=' * 60)
+    print('\n')
 
     # out of loop initialization
     rmse_df_row_dict_list = []
@@ -148,12 +153,14 @@ def flexibility_plot(a_gs_cv_results, an_estimator_name):
 
 
 def grid_search_bs(a_train_cap_x_df, a_train_y_df, target_attr, estimators, experiment_dict, preprocessor):
-    print('\nImplement grid search over hyper parameters to select best model:\n')
+    print('=' * 60)
+    print('Implement grid search over hyper parameters to select best model:')
+    print('=' * 60)
+    print('\n')
 
     i = -1
     a_df_row_dict_list = []
     for estimator, param_grid in experiment_dict.items():
-        print('\n', '*' * 80)
         i += 1
         print(estimators[i])
 
@@ -200,3 +207,43 @@ def grid_search_bs(a_train_cap_x_df, a_train_y_df, target_attr, estimators, expe
         a_df_row_dict_list.append(a_df_row_dict.copy())
 
     return pd.DataFrame(a_df_row_dict_list)
+
+
+def check_out_permutation_importance(results_df, train_cap_x_df, train_y_df, estimators):
+    print('=' * 60)
+    print('Check out permutation importance of features in the best estimator:')
+    print('=' * 60)
+    print('\n')
+
+    perm_imp_dict = {}
+
+    for i, estimator in enumerate(estimators):
+
+        perm_imp_dict[estimator] = []
+
+        best_estimator = results_df[results_df.estimator == estimator].best_estimator[i]
+        print('\n', 40 * '*', sep='')
+        print('\nestimator: ', estimator)
+        r_multi = permutation_importance(best_estimator, train_cap_x_df, train_y_df, n_repeats=10, random_state=0,
+                                         scoring=['neg_mean_squared_error'])
+        for metric in r_multi:
+            temp_metric = metric
+            if metric == 'neg_mean_squared_error':
+                temp_metric = 'sqrt_' + metric
+            print(f"\nmetric: {temp_metric}")
+            r = r_multi[metric]
+            for i in r.importances_mean.argsort()[::-1]:
+                if r.importances_mean[i] - 2 * r.importances_std[i] > 0:
+                    feature_name = train_cap_x_df.columns[i]
+                    mean = r.importances_mean[i]
+                    std_dev = r.importances_std[i]
+                    if metric == 'neg_mean_squared_error':
+                        mean = np.sqrt(mean)
+                        std_dev = np.sqrt(std_dev)
+                        perm_imp_dict[estimator].append(feature_name)
+                    print(
+                        f"    {feature_name:<8}"
+                        f" {mean:.3f}"
+                        f" +/- {std_dev:.3f}"
+                    )
+    return perm_imp_dict
