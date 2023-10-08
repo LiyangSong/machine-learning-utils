@@ -3,6 +3,12 @@ import pandas as pd
 from sklearn.metrics import r2_score, mean_squared_error
 import numpy as np
 from sklearn.base import clone
+import seaborn as sns
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
+import time
+import math
+import collections
 
 
 def plot_pred_vs_actual(predicted: pd.DataFrame, train_y_df: pd.DataFrame, estimator_name: str = ''):
@@ -103,3 +109,94 @@ def model_assess_with_bootstrapping(a_best_model, a_num_bs_samples, a_train_cap_
     rel_rmse_bs_results_df = pd.DataFrame(rel_rmse_df_row_dict_list)
 
     return rmse_bs_results_df, rel_rmse_bs_results_df
+
+
+def flexibility_plot(a_gs_cv_results, an_estimator_name):
+    # convert mse to rmse
+    a_gs_cv_results.mean_train_score = np.sqrt(-1 * a_gs_cv_results.mean_train_score)
+    a_gs_cv_results.mean_test_score = np.sqrt(-1 * a_gs_cv_results.mean_test_score)
+    # sort by train score and label with index for plotting
+    a_gs_cv_results = a_gs_cv_results.sort_values('mean_train_score', ascending=False).reset_index(drop=True). \
+        reset_index()
+    a_gs_cv_results = a_gs_cv_results[['index', 'rank_test_score', 'mean_train_score', 'mean_test_score']]
+
+    # plot train and test rmse
+    sns.scatterplot(x='index', y='mean_train_score', data=a_gs_cv_results, label='mean_train_score')
+    sns.scatterplot(x='index', y='mean_test_score', data=a_gs_cv_results, label='mean_test_score')
+    best_index = a_gs_cv_results.loc[a_gs_cv_results['rank_test_score'] == 1, 'index'].values[0]
+    plt.axvline(x=best_index)
+    plt.title(f'{an_estimator_name} flexibility plot')
+    plt.xlabel('flexibility')
+    plt.ylabel('rmse')
+    plt.legend()
+
+    # make index an integer on plot
+    new_list = range(math.floor(min(a_gs_cv_results.index)), math.ceil(max(a_gs_cv_results.index)) + 1)
+
+    skip = 1
+    if 10 <= len(new_list) < 100:
+        skip = 10
+    elif 100 <= len(new_list) < 1000:
+        skip = 100
+    else:
+        skip = 500
+    plt.xticks(np.arange(min(new_list), max(new_list) + 1, skip))
+
+    plt.grid()
+    plt.show()
+    return a_gs_cv_results
+
+
+def grid_search_bs(a_train_cap_x_df, a_train_y_df, target_attr, estimators, experiment_dict, preprocessor):
+    print('\nImplement grid search over hyper parameters to select best model:\n')
+
+    i = -1
+    a_df_row_dict_list = []
+    for estimator, param_grid in experiment_dict.items():
+        print('\n', '*' * 80)
+        i += 1
+        print(estimators[i])
+
+        # build the composite estimator
+        composite_estimator = Pipeline(steps=[('preprocessor', preprocessor), ('estimator', estimator)])
+
+        # instantiate the grid search cv
+        grid_search_cross_val = GridSearchCV(
+            estimator=composite_estimator,
+            param_grid=param_grid,
+            scoring='neg_mean_squared_error',
+            n_jobs=-1,
+            refit=True,
+            cv=5,
+            verbose=1,
+            pre_dispatch='2*n_jobs',
+            error_score=np.nan,
+            return_train_score=True
+        )
+
+        # fit the grid search cv
+        grid_search_cross_val.fit(a_train_cap_x_df, a_train_y_df[target_attr].array)
+        time.sleep(5)
+
+        # plot the flexilibilty plot
+        gs_cv_results = pd.DataFrame(grid_search_cross_val.cv_results_).sort_values('rank_test_score')
+
+        gs_cv_results = flexibility_plot(gs_cv_results, estimators[i])
+        print('\n', gs_cv_results[gs_cv_results['rank_test_score'] == 1], sep='')
+
+        print('\nbest_model_hyperparameters:\n', grid_search_cross_val.best_params_)
+
+        # collect results
+        a_df_row_dict = collections.OrderedDict()  # used to store results
+        best_estimator = grid_search_cross_val.best_estimator_
+        a_df_row_dict['iteration'] = i
+        a_df_row_dict['estimator'] = estimators[i]
+        a_df_row_dict['r_squared'] = r2_score(a_train_y_df, best_estimator.predict(a_train_cap_x_df))
+        a_df_row_dict['train_rmse'] = np.sqrt(mean_squared_error(a_train_y_df, best_estimator.predict(a_train_cap_x_df)))
+        a_df_row_dict['train_relative_rmse'] = a_df_row_dict['train_rmse'] / a_train_y_df[target_attr].mean()
+        a_df_row_dict['best_estimator'] = grid_search_cross_val.best_estimator_
+        a_df_row_dict['best_estimator_hyperparameters'] = grid_search_cross_val.best_params_
+
+        a_df_row_dict_list.append(a_df_row_dict.copy())
+
+    return pd.DataFrame(a_df_row_dict_list)
