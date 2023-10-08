@@ -50,7 +50,7 @@ def check_pred_performance(predicted: pd.DataFrame, train_y_df: pd.DataFrame,
 
     print('\nr_squared:', r2_score(train_y_df, predicted))
     print('rmse:', mean_squared_error(train_y_df, predicted, squared=False))
-    print('frac_rmse:', eval_dict['rmse'] / train_y_df.values.mean())
+    print('frac_rmse:', mean_squared_error(train_y_df, predicted, squared=False) / train_y_df.values.mean())
 
 
 def score_trained_estimator(a_trained_estimator, a_cap_x_df, a_y_df):
