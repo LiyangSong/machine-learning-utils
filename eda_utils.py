@@ -8,7 +8,10 @@ import time
 import statsmodels.api as sm
 from sklearn.preprocessing import StandardScaler
 from statsmodels.stats.outliers_influence import variance_inflation_factor
+from scikit_posthocs import posthoc_dunn
 
+
+# Common methods
 
 def split_nominal_and_numerical(a_df: pd.DataFrame, a_target_attr_list: list) -> (list, list):
     a_df = a_df.drop(columns=a_target_attr_list)
@@ -76,7 +79,16 @@ def check_out_target_distribution(a_df: pd.DataFrame, a_target_attr: list) -> No
     print(f'\nnull hypothesis: data comes from a normal distribution - p_value: {p_value}')
 
 
-# check correlations
+def drop_obs_with_nans(a_df: pd.DataFrame) -> pd.DataFrame:
+    if a_df.isna().sum().sum() > 0:
+        print(f'\nfound observations with nans - pre obs. drop a_df.shape: {a_df.shape}')
+        a_df = a_df.dropna(axis=0, how='any')
+        print(f'post obs. drop a_df.shape: {a_df.shape}')
+
+    return a_df
+
+
+# Numerical attributes
 
 def get_flattened_corr_matrix(corr_df: pd.DataFrame, corr_threshold: float = 0.75) -> pd.DataFrame:
     corr_df = corr_df.where(np.tril(np.ones(corr_df.shape)).astype(np.bool_))
@@ -131,15 +143,6 @@ def print_pair_plot(a_df: pd.DataFrame, a_num_attr_list: list) -> None:
               f'output.', sep='')
 
 
-def drop_obs_with_nans(a_df: pd.DataFrame) -> pd.DataFrame:
-    if a_df.isna().sum().sum() > 0:
-        print(f'\nfound observations with nans - pre obs. drop a_df.shape: {a_df.shape}')
-        a_df = a_df.dropna(axis=0, how='any')
-        print(f'post obs. drop a_df.shape: {a_df.shape}')
-
-    return a_df
-
-
 def prep_data_for_vif_calc(a_df: pd.DataFrame, a_num_attr_list: list) -> (pd.DataFrame, str):
     # drop observations with nans
     a_df = drop_obs_with_nans(a_df[a_num_attr_list])
@@ -184,3 +187,91 @@ def print_vifs(a_df: pd.DataFrame, a_num_attr_list: list) -> pd.DataFrame:
     time.sleep(2)
 
     return vif_df
+
+
+# Categorical Attributes
+
+def drop_categories_with_lt_n_instances(a_df, attr, a_target_attr, n):
+
+    print(f'\ncheck category counts and drop categories with count < {n}')
+    cat_drop_list = []
+    for category in a_df[attr].unique():
+        value_count = a_df.loc[a_df[attr] == category, a_target_attr].shape[0]
+        if value_count < n:
+            print(f'   category {category} has value count = {value_count} - drop it')
+            cat_drop_list.append(category)
+
+    a_df = a_df[~a_df[attr].isin(cat_drop_list)]
+
+    return a_df
+
+
+def do_kruskal_wallis(a_df, attr, a_target_attr):
+
+    print(f'\nperform the kruskal-wallis test to understand if there is a difference in {a_target_attr} means between '
+          f'the categories:')
+
+    a_df = a_df.loc[:, [attr, a_target_attr]]
+    a_df = drop_categories_with_lt_n_instances(a_df, attr, a_target_attr, 5)
+
+    groups = [a_df.loc[a_df[attr] == group, a_target_attr].values for group in a_df[attr].unique()]
+    results = stats.kruskal(*groups)
+
+    kruskal_wallis_alpha = 0.05
+    dunns_test_alpha = 0.05
+    if results.pvalue < kruskal_wallis_alpha:
+
+        print(f'\n   kruskal-wallis p-value: {results.pvalue}', sep='')
+        print(f'   at least one mean is different then the others at alpha = {kruskal_wallis_alpha} level - conduct '
+              f'the dunn\'s test')
+
+        results = posthoc_dunn(a_df, val_col=a_target_attr, group_col=attr, p_adjust='bonferroni')
+
+        sym_matrix_df = common_utils.convert_symmetric_matrix_to_df(results, 'p_value')
+
+        sym_matrix_df = sym_matrix_df[sym_matrix_df.p_value < dunns_test_alpha]
+
+        print(f'\ndunn\'s test results:')
+        print(sym_matrix_df)
+    else:
+        print(f'   differences in means are not significant at alpha = {kruskal_wallis_alpha} level')
+
+
+def print_catplots(a_df, a_cat_attr_list, a_target_attr, a_kinds_list, num_unique_levels_threshold=18,
+                   num_obs_threshold=1000):
+
+    if a_df.shape[0] > num_obs_threshold:
+        print('\n', f'too many observations for other kinds of plots - only plot strip plots', sep='')
+        a_kinds_list = ['strip']
+
+    for attr in a_cat_attr_list:
+        print('\n\n', 50 * '*', '\n', 50 * '*', sep='')
+        print(attr)
+        num_unique_levels = a_df[attr].nunique()
+        print('\na_df[attr].nunique():', num_unique_levels, sep='')
+        print('\na_df[attr].value_counts(dropna=False):\n', a_df[attr].value_counts(dropna=False), sep='')
+        if num_unique_levels > num_unique_levels_threshold:
+            print('\n', f'num_unique_levels = {num_unique_levels} which exceeds the num_unique_levels_threshold '
+                        f'{num_unique_levels_threshold} - do not plot!', sep='')
+            do_kruskal_wallis(a_df, attr, a_target_attr)
+            continue
+        for kind in a_kinds_list:
+            print('\nkind of catplot:', kind)
+            print(f'\ndrop rows with nan in {attr} attribute')
+            a_df = a_df.dropna(subset=attr)
+            if kind == 'violin':
+                sns.catplot(x=attr, y=a_target_attr, kind=kind, inner='stick', data=a_df)
+            else:
+                sns.catplot(x=attr, y=a_target_attr, kind=kind, data=a_df)
+            plt.xticks(rotation=90)
+            plt.grid()
+            plt.show()
+
+        # plot box plot
+        sns.catplot(x=attr, y=a_target_attr, kind='box', data=a_df)
+        plt.xticks(rotation=90)
+        plt.grid()
+        plt.show()
+
+        # kruskal-wallis
+        do_kruskal_wallis(a_df, attr, a_target_attr)
