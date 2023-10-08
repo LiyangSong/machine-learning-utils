@@ -299,7 +299,60 @@ def check_out_univariate_outliers_in_cap_x(a_df, a_num_attr_list, show_outliers=
     return tukey_univariate_poss_outlier_dict, tukey_univariate_prob_outlier_dict
 
 
+def mahalanobis_method(a_df):
+    # drop observations with nans
+    a_df = drop_obs_with_nans(a_df)
+
+    # calculate the mahalanobis distance
+    x_minus_mu = a_df - np.mean(a_df)
+    cov = np.cov(a_df.values.T)  # Covariance
+    inv_covmat = sp.linalg.inv(cov)  # Inverse covariance
+    left_term = np.dot(x_minus_mu, inv_covmat)
+    mahal = np.dot(left_term, x_minus_mu.T)
+    md = np.sqrt(mahal.diagonal())
+
+    # calculate threshold
+    threshold = np.sqrt(chi2.ppf((1 - 0.001), df=a_df.shape[1]))  # degrees of freedom = number of variables
+
+    # collect outliers
+    outlier = []
+    for index, value in enumerate(md):
+        if value > threshold:
+            outlier.append(index)
+        else:
+            continue
+
+    return outlier, md
+
+
+def check_out_multivariate_outliers_in_cap_x(a_df, a_num_attr_list, show_outliers=False):
+    print('check_out_multivariate_outliers_in_cap_x:')
+    outlier, _ = mahalanobis_method(a_df[a_num_attr_list])
+
+    print('\nmultivariate outlier summary:\n')
+    print(f'count of multivariate outliers using mahalanobis method: {len(outlier)}')
+    if show_outliers:
+        print('\nmultivariate outliers using mahalanobis method:', outlier)
+
+
 # Categorical Attributes
+
+def explore_cardinality_of_categorical_attrs(a_df, a_cat_attr_list):
+    print('explore_cardinality_of_categorical_attrs:')
+    for attr in a_cat_attr_list:
+        print('\n', 20 * '*')
+        print(attr)
+        print('a_df[attr].nunique():', a_df[attr].nunique())
+        print('a_df[attr].value_counts(dropna=False):\n', a_df[attr].value_counts(dropna=False))
+
+
+def check_out_skew_and_kurtosis(a_df):
+    print('\ncheck out skewness and kurtosis:')
+    for attr in a_df.columns:
+        print('\nattr: ', attr)
+        print(f'kurtosis: {a_df[attr].kurtosis()}')
+        print(f'skewness: {a_df[attr].skew()}')
+
 
 def drop_categories_with_lt_n_instances(a_df, attr, a_target_attr, n):
 
