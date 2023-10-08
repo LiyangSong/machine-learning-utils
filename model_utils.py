@@ -45,20 +45,12 @@ def check_pred_performance(predicted: pd.DataFrame, train_y_df: pd.DataFrame,
     print('=' * 60)
     print(f'Check {model_selection_stage} {estimator_name} estimator prediction performance on the {data_set_type} data set: ')
     print('=' * 60)
-    print('\n')
 
     plot_pred_vs_actual(predicted, train_y_df, estimator_name)
 
-    eval_dict = {'r_squared': r2_score(train_y_df, predicted)}
-    print('\nr_squared:', eval_dict['r_squared'])
-
-    eval_dict['rmse'] = mean_squared_error(train_y_df, predicted, squared=False)
-    print('rmse:', eval_dict['rmse'])
-
-    eval_dict['frac_rmse'] = eval_dict['rmse'] / train_y_df.values.mean()
-    print('frac_rmse:', eval_dict['frac_rmse'])
-
-    return eval_dict
+    print('\nr_squared:', r2_score(train_y_df, predicted))
+    print('rmse:', mean_squared_error(train_y_df, predicted, squared=False))
+    print('frac_rmse:', eval_dict['rmse'] / train_y_df.values.mean())
 
 
 def score_trained_estimator(a_trained_estimator, a_cap_x_df, a_y_df):
@@ -76,7 +68,6 @@ def model_assess_with_bootstrapping(a_best_model, a_num_bs_samples, a_train_cap_
     print('=' * 60)
     print('Model assessment with bootstrapping:', an_estimator_name)
     print('=' * 60)
-    print('\n')
 
     # out of loop initialization
     rmse_df_row_dict_list = []
@@ -156,7 +147,6 @@ def grid_search_bs(a_train_cap_x_df, a_train_y_df, target_attr, estimators, expe
     print('=' * 60)
     print('Implement grid search over hyper parameters to select best model:')
     print('=' * 60)
-    print('\n')
 
     i = -1
     a_df_row_dict_list = []
@@ -189,7 +179,7 @@ def grid_search_bs(a_train_cap_x_df, a_train_y_df, target_attr, estimators, expe
         gs_cv_results = pd.DataFrame(grid_search_cross_val.cv_results_).sort_values('rank_test_score')
 
         gs_cv_results = flexibility_plot(gs_cv_results, estimators[i])
-        print('\n', gs_cv_results[gs_cv_results['rank_test_score'] == 1], sep='')
+        print('\n', gs_cv_results[gs_cv_results['rank_test_score'] == 1])
 
         print('\nbest_model_hyperparameters:\n', grid_search_cross_val.best_params_)
 
@@ -206,14 +196,17 @@ def grid_search_bs(a_train_cap_x_df, a_train_y_df, target_attr, estimators, expe
 
         a_df_row_dict_list.append(a_df_row_dict.copy())
 
-    return pd.DataFrame(a_df_row_dict_list)
+    results_df = pd.DataFrame(a_df_row_dict_list)
+    print('\nresults_df:')
+    print(results_df)
+
+    return results_df
 
 
 def check_out_permutation_importance(results_df, train_cap_x_df, train_y_df, estimators):
     print('=' * 60)
     print('Check out permutation importance of features in the best estimator:')
     print('=' * 60)
-    print('\n')
 
     perm_imp_dict = {}
 
@@ -222,7 +215,7 @@ def check_out_permutation_importance(results_df, train_cap_x_df, train_y_df, est
         perm_imp_dict[estimator] = []
 
         best_estimator = results_df[results_df.estimator == estimator].best_estimator[i]
-        print('\n', 40 * '*', sep='')
+        print('\n', 40 * '*')
         print('\nestimator: ', estimator)
         r_multi = permutation_importance(best_estimator, train_cap_x_df, train_y_df, n_repeats=10, random_state=0,
                                          scoring=['neg_mean_squared_error'])
@@ -246,4 +239,5 @@ def check_out_permutation_importance(results_df, train_cap_x_df, train_y_df, est
                         f" {mean:.3f}"
                         f" +/- {std_dev:.3f}"
                     )
-    return perm_imp_dict
+    print('\nPermutation importance:')
+    print(perm_imp_dict)
