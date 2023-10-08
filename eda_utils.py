@@ -6,9 +6,11 @@ import numpy as np
 import seaborn as sns
 import time
 import statsmodels.api as sm
+from scipy.stats import chi2
 from sklearn.preprocessing import StandardScaler
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from scikit_posthocs import posthoc_dunn
+import scipy as sp
 
 import common_utils
 
