@@ -40,8 +40,7 @@ def check_for_duplicate_observations(a_df: pd.DataFrame) -> None:
         print('no duplicate observations observed in data set')
 
 
-def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, verbose: bool = True,
-                          nullity_corr_method: str = 'spearman', nullity_corr_threshold: float = 0.75) -> None:
+def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, verbose: bool = True) -> None:
     print('check_out_missingness:')
 
     if verbose:
@@ -189,6 +188,115 @@ def print_vifs(a_df: pd.DataFrame, a_num_attr_list: list) -> pd.DataFrame:
     time.sleep(2)
 
     return vif_df
+
+
+def print_hist_of_num_attrs(a_df: pd.DataFrame, a_num_attr_list: list) -> None:
+    print('histograms of the numerical attributes:')
+    a_df[a_num_attr_list].hist(figsize=(10, 10))
+    plt.tight_layout()
+    plt.show()
+
+
+def print_boxplots_of_num_attrs(a_df, a_num_attr_list, tukey_outliers=False, show_outliers=False):
+    print('boxplots of the numerical attributes:\n')
+
+    tukey_univariate_poss_outlier_dict = {}
+    tukey_univariate_prob_outlier_dict = {}
+    for attr in a_num_attr_list:
+        print('\n', 20 * '*')
+        print(attr)
+        a_df.boxplot(column=attr, figsize=(5, 5))
+        plt.show()
+        if tukey_outliers:
+            outliers_prob, outliers_poss = tukeys_method(a_df, attr)
+            tukey_univariate_prob_outlier_dict[attr] = outliers_prob
+            tukey_univariate_poss_outlier_dict[attr] = outliers_poss
+            if show_outliers:
+                print('univariate outliers:')
+                print('\ntukey\'s method - outliers_prob indices:\n', outliers_prob)
+                print('\ntukey\'s method - outliers_poss indices:\n', outliers_poss)
+
+    return tukey_univariate_poss_outlier_dict, tukey_univariate_prob_outlier_dict
+
+
+def tukeys_method(a_df: pd.DataFrame, variable: str):
+
+    q1 = a_df[variable].quantile(0.25)
+    q3 = a_df[variable].quantile(0.75)
+    iqr = q3 - q1
+    inner_fence = 1.5 * iqr
+    outer_fence = 3 * iqr
+
+    # inner fence lower and upper end
+    inner_fence_le = q1 - inner_fence
+    inner_fence_ue = q3 + inner_fence
+
+    # outer fence lower and upper end
+    outer_fence_le = q1 - outer_fence
+    outer_fence_ue = q3 + outer_fence
+
+    outliers_prob = []
+    outliers_poss = []
+    for index, x in zip(a_df.index, a_df[variable]):
+        if x <= outer_fence_le or x >= outer_fence_ue:
+            outliers_prob.append(index)
+    for index, x in zip(a_df.index, a_df[variable]):
+        if x <= inner_fence_le or x >= inner_fence_ue:
+            outliers_poss.append(index)
+
+    return outliers_prob, outliers_poss
+
+
+def use_tukeys_method(a_df, a_num_attr_list):
+    print('use_tukeys_method to identify outliers:\n')
+
+    tukey_univariate_poss_outlier_dict = {}
+    tukey_univariate_prob_outlier_dict = {}
+    for attr in a_num_attr_list:
+        print('\n', attr)
+        outliers_prob, outliers_poss = tukeys_method(a_df, attr)
+        print('tukey\'s method - outliers_prob indices: ', outliers_prob)
+        tukey_univariate_prob_outlier_dict[attr] = outliers_prob
+        print('tukey\'s method - outliers_poss indices: ', outliers_poss)
+        tukey_univariate_poss_outlier_dict[attr] = outliers_poss
+
+    return tukey_univariate_poss_outlier_dict, tukey_univariate_prob_outlier_dict
+
+
+def check_out_univariate_outliers_in_cap_x(a_df, a_num_attr_list, show_outliers=False):
+    print('check_out_univariate_outliers_in_cap_x:')
+
+    print_hist_of_num_attrs(a_df, a_num_attr_list)
+
+    tukey_outliers = True
+    tukey_univariate_poss_outlier_dict, tukey_univariate_prob_outlier_dict = \
+        print_boxplots_of_num_attrs(a_df, a_num_attr_list, tukey_outliers=tukey_outliers, show_outliers=show_outliers)
+
+    if not tukey_outliers:
+        tukey_univariate_poss_outlier_dict, tukey_univariate_prob_outlier_dict = \
+            use_tukeys_method(a_df, a_num_attr_list)
+
+    if show_outliers:
+        print('\ntukey_univariate_prob_outlier_dict:')
+    attrs_with_tukey_prob_outliers_list = []
+    univariate_outlier_list = []
+    for attr, outliers_prob in tukey_univariate_prob_outlier_dict.items():
+        if show_outliers:
+            print('\n   attr:', attr, '; outliers_prob:', outliers_prob)
+        if len(outliers_prob) > 0:
+            attrs_with_tukey_prob_outliers_list.append(attr)
+            univariate_outlier_list.extend(outliers_prob)
+
+    print('\n', 30 * '*')
+    print('univariate outlier summary:')
+    print(f'\ncount of attributes with probable tukey univariate outliers:\n{len(attrs_with_tukey_prob_outliers_list)}')
+    print(f'\nlist of attributes with probable tukey univariate outliers:\n{attrs_with_tukey_prob_outliers_list}')
+    print(f'\ncount of unique probable tukey univariate outliers across all attributes:\n'
+          f'{len(set(univariate_outlier_list))}')
+    if show_outliers:
+        print(f'\nlist of observations with probable tukey univariate outliers:\n{set(univariate_outlier_list)}')
+
+    return tukey_univariate_poss_outlier_dict, tukey_univariate_prob_outlier_dict
 
 
 # Categorical Attributes
