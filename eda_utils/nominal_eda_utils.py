@@ -18,7 +18,7 @@ def explore_cardinality_of_cat_attrs(a_df: pd.DataFrame, a_cat_attr_list: list) 
 
 
 def drop_cat_with_lt_n_instances(a_df: pd.DataFrame, attr: str, a_target_attr: str, n) -> pd.DataFrame:
-    print(f'\nCheck category counts and drop categories with count < {n}\n')
+    print(f'\nCheck {attr} category counts and drop categories with count < {n}\n')
 
     cat_drop_list = []
     for category in a_df[attr].unique():
