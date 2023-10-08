@@ -175,7 +175,7 @@ def grid_search_bs(a_train_cap_x_df, a_train_y_df, target_attr, estimators, expe
         )
 
         # fit the grid search cv
-        grid_search_cross_val.fit(a_train_cap_x_df, a_train_y_df[target_attr].array)
+        grid_search_cross_val.fit(a_train_cap_x_df, a_train_y_df[target_attr].values.ravel())
         time.sleep(5)
 
         # plot the flexilibilty plot
