@@ -93,7 +93,7 @@ def prep_data_for_vif_calc(a_df: pd.DataFrame, a_num_attr_list: list) -> (pd.Dat
 
     # if numerical attributes in the data frame are not scaled then scale them - don't scale the bias term
     a_num_attr_list.remove(bias_attr)
-    if not (a_df[a_num_attr_list].mean() <= 1e-14).all():
+    if not (a_df[a_num_attr_list].mean() <= 1e-10).all():
         print('scale the attributes - but not the bias term')
         design_matrix[a_num_attr_list] = StandardScaler().fit_transform(design_matrix[a_num_attr_list])
 
