@@ -124,26 +124,13 @@ def print_hist_of_num_attrs(a_df: pd.DataFrame, a_num_attr_list: list) -> None:
     plt.show()
 
 
-def print_boxplots_of_num_attrs(a_df, a_num_attr_list, tukey_outliers=False, show_outliers=False):
+def print_boxplots_of_num_attrs(a_df, a_num_attr_list):
     print('\nBoxplots of the numerical attributes:\n')
-
-    tukey_univariate_poss_outlier_dict = {}
-    tukey_univariate_prob_outlier_dict = {}
     for attr in a_num_attr_list:
         print('\n', 20 * '*')
         print(attr)
         a_df.boxplot(column=attr, figsize=(5, 5))
         plt.show()
-        if tukey_outliers:
-            outliers_prob, outliers_poss = tukeys_method(a_df, attr)
-            tukey_univariate_prob_outlier_dict[attr] = outliers_prob
-            tukey_univariate_poss_outlier_dict[attr] = outliers_poss
-            if show_outliers:
-                print('univariate outliers:')
-                print('\ntukey\'s method - outliers_prob indices:\n', outliers_prob)
-                print('\ntukey\'s method - outliers_poss indices:\n', outliers_poss)
-
-    return tukey_univariate_poss_outlier_dict, tukey_univariate_prob_outlier_dict
 
 
 def tukeys_method(a_df: pd.DataFrame, variable: str) -> (list, list):
@@ -196,15 +183,7 @@ def use_tukeys_method(a_df: pd.DataFrame, a_num_attr_list: list) -> (dict, dict)
 def check_out_univariate_outliers_in_cap_x(a_df, a_num_attr_list, show_outliers=False):
     print('\nCheck out univariate outliers in cap_x:\n')
 
-    print_hist_of_num_attrs(a_df, a_num_attr_list)
-
-    tukey_outliers = True
-    tukey_univariate_poss_outlier_dict, tukey_univariate_prob_outlier_dict = \
-        print_boxplots_of_num_attrs(a_df, a_num_attr_list, tukey_outliers=tukey_outliers, show_outliers=show_outliers)
-
-    if not tukey_outliers:
-        tukey_univariate_poss_outlier_dict, tukey_univariate_prob_outlier_dict = \
-            use_tukeys_method(a_df, a_num_attr_list)
+    tukey_univariate_poss_outlier_dict, tukey_univariate_prob_outlier_dict = use_tukeys_method(a_df, a_num_attr_list)
 
     if show_outliers:
         print('\ntukey_univariate_prob_outlier_dict:')
