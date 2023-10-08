@@ -7,7 +7,6 @@ def load_csv_into_df(a_path: str) -> pd.DataFrame:
     print('=' * 60)
     print('Load csv file into DataFrame:')
     print('=' * 60)
-    print('\n')
 
     a_df = pd.read_csv(a_path)
     print("data loaded: ", a_df.shape)
@@ -18,7 +17,6 @@ def drop_na_target_obs(a_df: pd.DataFrame, target_attr: list) -> pd.DataFrame:
     print('=' * 60)
     print('Drop missing target observations:')
     print('=' * 60)
-    print('\n')
 
     a_df = a_df.dropna(subset=target_attr)
     print("data shape after drop: ", a_df.shape)
@@ -30,7 +28,6 @@ def split_train_test_df(a_df: pd.DataFrame, test_size: float = 0.2, random_state
     print('=' * 60)
     print('Split DataFrame into train and test set:')
     print('=' * 60)
-    print('\n')
 
     cap_x_df, y_df = a_df.iloc[:, :-1], a_df.iloc[:, -1].to_frame()
     a_train_cap_x_df, a_test_cap_x_df, a_train_y_df, a_test_y_df = train_test_split(

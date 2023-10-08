@@ -8,7 +8,6 @@ def check_for_duplicate_obs(a_df: pd.DataFrame) -> None:
     print('=' * 60)
     print('Check for duplicate observations:')
     print('=' * 60)
-    print('\n')
 
     dedup_a_df = a_df.drop_duplicates()
     print('a_df.shape:', a_df.shape)
@@ -24,7 +23,6 @@ def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, 
     print('=' * 60)
     print('\nCheck out missingness:\n')
     print('=' * 60)
-    print('\n')
 
     if verbose:
         print('\nNA (np.nan or None) count - a_df[an_attr_list].isna().sum():\n', a_df.isna().sum())
@@ -32,13 +30,13 @@ def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, 
               a_df.isna().sum() / a_df.shape[0])
 
     if a_df.isna().sum().sum() > 0:
-        print('\nmissing values in data set!!!')
+        print('\nFound missing values in data set!!!')
 
         sample_size = a_df.shape[0]
         if a_df.shape[0] > sample_size_threshold:
             sample_size = sample_size_threshold
 
-        print('\nuse missingno to understand pattern of missingness:')
+        print('\nUse missingno to understand pattern of missingness:')
         print('a_df.shape[0]:', a_df.shape[0])
         print('missingno sample_size:', sample_size)
 
@@ -48,7 +46,7 @@ def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, 
         plt.show()
 
     else:
-        print('\nno missing values in data set.')
+        print('\nNo missing values in data set.')
 
 
 def drop_obs_with_nans(a_df: pd.DataFrame) -> pd.DataFrame:
@@ -72,7 +70,6 @@ def check_out_target_distribution(a_df: pd.DataFrame, a_target_attr: list) -> No
     print('=' * 60)
     print('\nCheck out target distribution:\n')
     print('=' * 60)
-    print('\n')
 
     print('\na_df[a_target_attr].describe():')
     print(a_df[a_target_attr].describe())
@@ -83,24 +80,23 @@ def check_out_target_distribution(a_df: pd.DataFrame, a_target_attr: list) -> No
 
     statistic, p_value = stats.normaltest(a_df[a_target_attr].dropna())
     print('\nTest data for normality:')
-    print(f'\nnull hypothesis: data comes from a normal distribution - p_value: {p_value}')
+    print(f'null hypothesis: data comes from a normal distribution - p_value: {p_value}')
 
-    check_out_target_imbalance(a_df, a_target_attr)
+    check_out_target_imbalance(a_df, a_target_attr[0])
 
 
-def check_out_target_imbalance(a_df, a_target_attr):
-    print('\nCheck out target imbalance:\n')
+def check_out_target_imbalance(a_df: pd.DataFrame, a_target_attr: str) -> None:
+    print('\nCheck out target imbalance:')
 
-    print(f'\nnumber of classes in target attribute: {a_df[a_target_attr].nunique()}')
-    print(f'\nclasses in target attribute: {a_df[a_target_attr].unique()}')
-    print(f'\nclass balance:\n{a_df[a_target_attr].value_counts(normalize=True)}')
+    print(f'number of classes in target attribute: {a_df[a_target_attr].nunique()}')
+    print(f'classes in target attribute: {a_df[a_target_attr].unique()}')
+    print(f'class balance:\n{a_df[a_target_attr].value_counts(normalize=True)}')
 
 
 def split_nominal_and_numerical_attr(a_df: pd.DataFrame, a_target_attr_list: list) -> (list, list):
     print('=' * 60)
     print('Split nominal and numerical attr:')
     print('=' * 60)
-    print('\n')
 
     a_df = a_df.drop(columns=a_target_attr_list)
     a_numerical_attr_list = a_df.select_dtypes(include=['number']).columns.tolist()
