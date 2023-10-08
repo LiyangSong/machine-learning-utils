@@ -10,6 +10,8 @@ from sklearn.preprocessing import StandardScaler
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from scikit_posthocs import posthoc_dunn
 
+import common_utils
+
 
 # Common methods
 
@@ -43,9 +45,9 @@ def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, 
     print('check_out_missingness:')
 
     if verbose:
-        print('\nNA (np.nan or None) count - a_df[an_attr_list].isna().sum():\n', a_df.isna().sum(), sep='')
+        print('\nNA (np.nan or None) count - a_df[an_attr_list].isna().sum():\n', a_df.isna().sum())
         print('\nNA (np.nan or None) fraction - a_df[an_attr_list].isna().sum() / a_df.shape[0]:\n',
-              a_df.isna().sum() / a_df.shape[0], sep='')
+              a_df.isna().sum() / a_df.shape[0])
 
     if a_df.isna().sum().sum() > 0:
         print('\nmissing values in data set!!!')
@@ -69,7 +71,7 @@ def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, 
 
 def check_out_target_distribution(a_df: pd.DataFrame, a_target_attr: list) -> None:
     print('check_out_target_distribution:')
-    print('\na_df[a_target_attr].describe():\n', a_df[a_target_attr].describe(), sep='')
+    print('\na_df[a_target_attr].describe():\n', a_df[a_target_attr].describe())
     print('\n')
     a_df[a_target_attr].hist()
     plt.grid()
@@ -128,7 +130,7 @@ def print_corr_of_num_attrs(a_df: pd.DataFrame, a_num_attr_list: list, method: s
         _ = get_correlation_data_frame(a_df, a_num_attr_list, method=method, corr_threshold=corr_threshold)
     else:
         print(f'\nSkip correlation heat map - {a_df[a_num_attr_list].shape[1]} attributes is too many for a useful '
-              f'visual output.', sep='')
+              f'visual output.')
         _ = get_correlation_data_frame(a_df, a_num_attr_list, method=method, corr_threshold=corr_threshold)
 
 
@@ -140,7 +142,7 @@ def print_pair_plot(a_df: pd.DataFrame, a_num_attr_list: list) -> None:
         plt.show()
     else:
         print(f'\nSkip pair plots - {a_df[a_num_attr_list].shape[1]} attributes is too many for a useful visual '
-              f'output.', sep='')
+              f'output.')
 
 
 def prep_data_for_vif_calc(a_df: pd.DataFrame, a_num_attr_list: list) -> (pd.DataFrame, str):
@@ -161,7 +163,7 @@ def prep_data_for_vif_calc(a_df: pd.DataFrame, a_num_attr_list: list) -> (pd.Dat
         design_matrix = sm.add_constant(a_df[a_num_attr_list])
         bias_attr = 'const'
         a_num_attr_list = [bias_attr] + a_num_attr_list
-        print('\nAdded a bias term to the data frame to construct the design matrix for assessment of vifs.', sep='')
+        print('\nAdded a bias term to the data frame to construct the design matrix for assessment of vifs.')
 
     # if numerical attributes in the data frame are not scaled then scale them - don't scale the bias term
     a_num_attr_list.remove(bias_attr)
@@ -183,7 +185,7 @@ def print_vifs(a_df: pd.DataFrame, a_num_attr_list: list) -> pd.DataFrame:
     vif_df['vif'] = [variance_inflation_factor(design_matrix.values, i) for i in range(design_matrix.shape[1])]
     vif_df['vif'] = vif_df['vif'].round(2)
 
-    print('\n', vif_df, sep='')
+    print('\n', vif_df)
     time.sleep(2)
 
     return vif_df
@@ -221,7 +223,7 @@ def do_kruskal_wallis(a_df, attr, a_target_attr):
     dunns_test_alpha = 0.05
     if results.pvalue < kruskal_wallis_alpha:
 
-        print(f'\n   kruskal-wallis p-value: {results.pvalue}', sep='')
+        print(f'\n   kruskal-wallis p-value: {results.pvalue}')
         print(f'   at least one mean is different then the others at alpha = {kruskal_wallis_alpha} level - conduct '
               f'the dunn\'s test')
 
@@ -241,18 +243,18 @@ def print_catplots(a_df, a_cat_attr_list, a_target_attr, a_kinds_list, num_uniqu
                    num_obs_threshold=1000):
 
     if a_df.shape[0] > num_obs_threshold:
-        print('\n', f'too many observations for other kinds of plots - only plot strip plots', sep='')
+        print('\n', f'too many observations for other kinds of plots - only plot strip plots')
         a_kinds_list = ['strip']
 
     for attr in a_cat_attr_list:
-        print('\n\n', 50 * '*', '\n', 50 * '*', sep='')
+        print('\n\n', 50 * '*', '\n', 50 * '*')
         print(attr)
         num_unique_levels = a_df[attr].nunique()
-        print('\na_df[attr].nunique():', num_unique_levels, sep='')
-        print('\na_df[attr].value_counts(dropna=False):\n', a_df[attr].value_counts(dropna=False), sep='')
+        print('\na_df[attr].nunique():', num_unique_levels)
+        print('\na_df[attr].value_counts(dropna=False):\n', a_df[attr].value_counts(dropna=False))
         if num_unique_levels > num_unique_levels_threshold:
             print('\n', f'num_unique_levels = {num_unique_levels} which exceeds the num_unique_levels_threshold '
-                        f'{num_unique_levels_threshold} - do not plot!', sep='')
+                        f'{num_unique_levels_threshold} - do not plot!')
             do_kruskal_wallis(a_df, attr, a_target_attr)
             continue
         for kind in a_kinds_list:
