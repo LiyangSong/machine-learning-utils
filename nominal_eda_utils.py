@@ -8,17 +8,21 @@ import general_utils
 
 
 def explore_cardinality_of_cat_attrs(a_df: pd.DataFrame, a_cat_attr_list: list) -> None:
-    print('\nExplore cardinality of categorical attributions:\n')
+    print('=' * 60)
+    print('Explore cardinality of categorical attributions:')
+    print('=' * 60)
+    print('\n')
 
     for attr in a_cat_attr_list:
-        print('\n', 20 * '*')
+        print('\n', 40 * '*', '\n')
         print(attr)
         print('a_df[attr].nunique():', a_df[attr].nunique())
         print('a_df[attr].value_counts(dropna=False):\n', a_df[attr].value_counts(dropna=False))
 
 
 def drop_cat_with_lt_n_instances(a_df: pd.DataFrame, attr: str, n) -> pd.DataFrame:
-    print(f'\nCheck {attr} category counts and drop categories with count < {n}\n')
+    print('\n', 40 * '*', '\n')
+    print(f'Check {attr} category counts and drop categories with count < {n}\n')
 
     cat_drop_list = []
     for category in a_df[attr].unique():
@@ -33,7 +37,10 @@ def drop_cat_with_lt_n_instances(a_df: pd.DataFrame, attr: str, n) -> pd.DataFra
 
 
 def do_kruskal_wallis(a_df: pd.DataFrame, a_cat_attr_list: list, a_target_attr: str) -> None:
-    print(f'\nPerform the kruskal-wallis test to understand if there is a difference in {a_target_attr} means between the categories:\n')
+    print('=' * 60)
+    print(f'Perform the kruskal-wallis test to understand if there is a difference in {a_target_attr} means between the categories:')
+    print('=' * 60)
+    print('\n')
 
     for attr in a_cat_attr_list:
         a_df_attr = a_df.loc[:, [attr, a_target_attr]]
@@ -64,14 +71,17 @@ def do_kruskal_wallis(a_df: pd.DataFrame, a_cat_attr_list: list, a_target_attr: 
 
 def print_cat_plots(a_df, a_cat_attr_list, a_target_attr, a_kinds_list, num_unique_levels_threshold=18,
                     num_obs_threshold=1000):
-    print('\n Plots for categories: \n')
+    print('=' * 60)
+    print('Plots for categories:')
+    print('=' * 60)
+    print('\n')
 
     if a_df.shape[0] > num_obs_threshold:
-        print(f'\ntoo many observations for other kinds of plots - only plot strip plots')
+        print(f'too many observations for other kinds of plots - only plot strip plots')
         a_kinds_list = ['strip']
 
     for attr in a_cat_attr_list:
-        print('\n', 20 * '*')
+        print('\n', 40 * '*', '\n')
         print(attr)
         num_unique_levels = a_df[attr].nunique()
         print('\na_df[attr].nunique():', num_unique_levels)

@@ -5,7 +5,10 @@ import scipy.stats as stats
 
 
 def check_for_duplicate_obs(a_df: pd.DataFrame) -> None:
-    print('\nCheck for duplicate observations:\n')
+    print('=' * 60)
+    print('Check for duplicate observations:')
+    print('=' * 60)
+    print('\n')
 
     dedup_a_df = a_df.drop_duplicates()
     print('a_df.shape:', a_df.shape)
@@ -18,7 +21,10 @@ def check_for_duplicate_obs(a_df: pd.DataFrame) -> None:
 
 
 def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, verbose: bool = True) -> None:
+    print('=' * 60)
     print('\nCheck out missingness:\n')
+    print('=' * 60)
+    print('\n')
 
     if verbose:
         print('\nNA (np.nan or None) count - a_df[an_attr_list].isna().sum():\n', a_df.isna().sum())
@@ -63,14 +69,23 @@ def check_out_skew_and_kurtosis(a_df: pd.DataFrame) -> None:
 
 
 def check_out_target_distribution(a_df: pd.DataFrame, a_target_attr: list) -> None:
+    print('=' * 60)
     print('\nCheck out target distribution:\n')
-    print('\na_df[a_target_attr].describe():\n', a_df[a_target_attr].describe(), '\n')
+    print('=' * 60)
+    print('\n')
+
+    print('\na_df[a_target_attr].describe():')
+    print(a_df[a_target_attr].describe())
+
     a_df[a_target_attr].hist()
     plt.grid()
     plt.show()
+
     statistic, p_value = stats.normaltest(a_df[a_target_attr].dropna())
-    print('\ntest data for normality:\n')
+    print('\nTest data for normality:')
     print(f'\nnull hypothesis: data comes from a normal distribution - p_value: {p_value}')
+
+    check_out_target_imbalance(a_df, a_target_attr)
 
 
 def check_out_target_imbalance(a_df, a_target_attr):
@@ -82,7 +97,10 @@ def check_out_target_imbalance(a_df, a_target_attr):
 
 
 def split_nominal_and_numerical_attr(a_df: pd.DataFrame, a_target_attr_list: list) -> (list, list):
-    print('\nSplit nominal and numerical attr:\n')
+    print('=' * 60)
+    print('Split nominal and numerical attr:')
+    print('=' * 60)
+    print('\n')
 
     a_df = a_df.drop(columns=a_target_attr_list)
     a_numerical_attr_list = a_df.select_dtypes(include=['number']).columns.tolist()
