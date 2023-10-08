@@ -20,9 +20,9 @@ def plot_pred_vs_actual(predicted: pd.DataFrame, train_y_df: pd.DataFrame, estim
     intercept = 0
 
     try:
-        line_values = [slope * x_value + intercept for x_value in y_df.values]
+        line_values = [slope * x_value + intercept for x_value in train_y_df.values]
     except AttributeError:
-        line_values = [slope * x_value + intercept for x_value in y_df]
+        line_values = [slope * x_value + intercept for x_value in train_y_df]
 
     plt.plot(train_y_df, line_values, 'b')
     plt.grid()
@@ -46,7 +46,7 @@ def check_pred_performance(predicted: pd.DataFrame, train_y_df: pd.DataFrame,
     eval_dict['rmse'] = mean_squared_error(train_y_df, predicted, squared=False)
     print('rmse:', eval_dict['rmse'])
 
-    eval_dict['frac_rmse'] = eval_dict['rmse'] / y_df.values.mean()
+    eval_dict['frac_rmse'] = eval_dict['rmse'] / train_y_df.values.mean()
     print('frac_rmse:', eval_dict['frac_rmse'])
 
     return eval_dict
