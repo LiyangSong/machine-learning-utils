@@ -18,8 +18,7 @@ def drop_na_target_obs(a_df: pd.DataFrame, target_attr: list) -> pd.DataFrame:
 
 
 def split_train_test_df(a_df: pd.DataFrame, test_size: float = 0.2, random_state: int = 42) -> (
-        pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame):
-
+        pd.DataFrame, pd.DataFrame):
     print('\nSplit DataFrame into train and test set:\n')
     cap_x_df, y_df = a_df.iloc[:, :-1], a_df.iloc[:, -1].to_frame()
     a_train_cap_x_df, a_test_cap_x_df, a_train_y_df, a_test_y_df = train_test_split(
@@ -35,7 +34,11 @@ def split_train_test_df(a_df: pd.DataFrame, test_size: float = 0.2, random_state
     print("test set:")
     print(a_test_cap_x_df.shape, a_test_y_df.shape)
 
-    return a_train_cap_x_df, a_test_cap_x_df, a_train_y_df, a_test_y_df
+    save_df_to_csv(a_train_cap_x_df, a_train_y_df, 'train_df.csv')
+    save_df_to_csv(a_test_cap_x_df, a_test_y_df, 'test_df.csv')
+
+    del a_test_cap_x_df, a_test_y_df
+    return a_train_cap_x_df, a_train_y_df
 
 
 def save_df_to_csv(a_cap_x_df: pd.DataFrame, a_y_df: pd.DataFrame, a_csv_filename: str) -> None:
