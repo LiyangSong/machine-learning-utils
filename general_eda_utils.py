@@ -50,11 +50,11 @@ def check_out_missingness(a_df: pd.DataFrame, sample_size_threshold: int = 250, 
 
 
 def drop_obs_with_nans(a_df: pd.DataFrame) -> pd.DataFrame:
-    print('drop_obs_with_nans:\n')
+    print('Drop observations with nans:')
     if a_df.isna().sum().sum() > 0:
-        print(f'\nfound observations with nans - pre obs. drop a_df.shape: {a_df.shape}')
+        print(f'Found observations with nans - pre obs. drop a_df.shape: {a_df.shape}')
         a_df = a_df.dropna(axis=0, how='any')
-        print(f'post obs. drop a_df.shape: {a_df.shape}')
+        print(f'Post obs. drop a_df.shape: {a_df.shape}')
     return a_df
 
 

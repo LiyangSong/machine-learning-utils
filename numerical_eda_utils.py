@@ -2,7 +2,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-import time
 import statsmodels.api as sm
 from scipy.stats import chi2
 from sklearn.preprocessing import StandardScaler
@@ -13,7 +12,7 @@ from general_eda_utils import drop_obs_with_nans
 
 
 def get_flattened_corr_matrix(corr_df: pd.DataFrame, corr_threshold: float = 0.75) -> pd.DataFrame:
-    print(f'\nGet flattened correlation matrix from DataFrame with threshold {corr_threshold}:\n')
+    print(f'Get flattened correlation matrix from DataFrame with threshold {corr_threshold}:')
 
     corr_df = corr_df.where(np.tril(np.ones(corr_df.shape)).astype(np.bool_))
     flat_attr_correlations_df = corr_df.stack().reset_index()
@@ -33,7 +32,7 @@ def get_flattened_corr_matrix(corr_df: pd.DataFrame, corr_threshold: float = 0.7
 
 def get_corr_data_frame(a_df: pd.DataFrame, a_num_attr_list: list, method: str = 'pearson',
                         corr_threshold: float = 0.75) -> pd.DataFrame:
-    print(f'\nGet correlation DataFrame using {method} method with threshold {corr_threshold}:\n')
+    print(f'\nGet correlation DataFrame using {method} method with threshold {corr_threshold}:')
 
     attr_correlations_df = a_df[a_num_attr_list].corr(method=method)
     flat_attr_correlations_df = get_flattened_corr_matrix(attr_correlations_df, corr_threshold=corr_threshold)
@@ -43,6 +42,10 @@ def get_corr_data_frame(a_df: pd.DataFrame, a_num_attr_list: list, method: str =
 
 def print_corr_of_num_attrs(a_df: pd.DataFrame, a_num_attr_list: list, method: str = 'pearson',
                             corr_threshold: float = 0.50) -> None:
+
+    print('=' * 60)
+    print('Check out correlation of numerical attributes:')
+    print('=' * 60)
 
     print('\nHeatmap of design matrix attribute correlations:\n')
 
@@ -70,7 +73,7 @@ def print_pair_plot(a_df: pd.DataFrame, a_num_attr_list: list) -> None:
 
 
 def prep_data_for_vif_calc(a_df: pd.DataFrame, a_num_attr_list: list) -> (pd.DataFrame, str):
-    print('\n Prepare DataFrame for vif calculation:\n')
+    print('\nPrepare DataFrame for vif calculation:')
 
     # drop observations with nans
     a_df = drop_obs_with_nans(a_df[a_num_attr_list])
@@ -82,7 +85,7 @@ def prep_data_for_vif_calc(a_df: pd.DataFrame, a_num_attr_list: list) -> (pd.Dat
         if a_df[attr].nunique() == 1 and a_df[attr].iloc[0] == 1:  # found the bias attribute
             design_matrix = a_df[a_num_attr_list]
             bias_attr = attr
-            print('found the bias term - no need to add one')
+            print('Found the bias term - no need to add one')
             break
 
     if design_matrix is None:
@@ -94,14 +97,16 @@ def prep_data_for_vif_calc(a_df: pd.DataFrame, a_num_attr_list: list) -> (pd.Dat
     # if numerical attributes in the data frame are not scaled then scale them - don't scale the bias term
     a_num_attr_list.remove(bias_attr)
     if not (a_df[a_num_attr_list].mean() <= 1e-10).all():
-        print('scale the attributes - but not the bias term')
+        print('Scale the attributes - but not the bias term')
         design_matrix[a_num_attr_list] = StandardScaler().fit_transform(design_matrix[a_num_attr_list])
 
     return design_matrix, bias_attr
 
 
-def print_vifs(a_df: pd.DataFrame, a_num_attr_list: list) -> pd.DataFrame:
-    print('\nInvestigate multi co-linearity: calculate variance inflation factors:\n')
+def print_vifs(a_df: pd.DataFrame, a_num_attr_list: list) -> None:
+    print('=' * 60)
+    print('Investigate multi co-linearity: calculate variance inflation factors (VIF):')
+    print('=' * 60)
 
     design_matrix, bias_attr = prep_data_for_vif_calc(a_df, a_num_attr_list)
 
@@ -112,30 +117,39 @@ def print_vifs(a_df: pd.DataFrame, a_num_attr_list: list) -> pd.DataFrame:
     vif_df['vif'] = vif_df['vif'].round(2)
 
     print('\n', vif_df)
-    time.sleep(2)
-
-    return vif_df
 
 
 def print_hist_of_num_attrs(a_df: pd.DataFrame, a_num_attr_list: list) -> None:
-    print('\nHistograms of the numerical attributes:\n')
+    print('=' * 60)
+    print('Histograms of the numerical attributes:')
+    print('=' * 60)
     a_df[a_num_attr_list].hist(figsize=(10, 10))
     plt.tight_layout()
     plt.show()
 
 
-def print_boxplots_of_num_attrs(a_df, a_num_attr_list):
-    print('\nBoxplots of the numerical attributes:\n')
-    for attr in a_num_attr_list:
-        print('\n', 20 * '*')
-        print(attr)
-        a_df.boxplot(column=attr, figsize=(5, 5))
-        plt.show()
+def print_boxplots_of_num_attrs(a_df, a_num_attr_list, n_cols=4):
+    print('=' * 60)
+    print('Boxplots of the numerical attributes:')
+    print('=' * 60)
+
+    n_attrs = len(a_num_attr_list)
+    n_rows = (n_attrs // n_cols) + (n_attrs % n_cols > 0)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(16, 5 * n_rows))
+
+    for i, attr in enumerate(a_num_attr_list):
+        row = i // n_cols
+        col = i % n_cols
+        a_df.boxplot(column=attr, ax=axes[row, col])
+        axes[row, col].set_title(attr)
+
+    plt.tight_layout()
+    plt.show()
 
 
 def tukeys_method(a_df: pd.DataFrame, variable: str) -> (list, list):
 
-    print(f'\nImplement Tukey\'s fences to identify outliers in attribute {variable} based on the Inter Quartile Range (IQR) method: \n')
+    print(f'\nImplement Tukey\'s fences to identify outliers in attribute {variable} based on the Inter Quartile Range (IQR) method:')
 
     q1 = a_df[variable].quantile(0.25)
     q3 = a_df[variable].quantile(0.75)
@@ -163,12 +177,12 @@ def tukeys_method(a_df: pd.DataFrame, variable: str) -> (list, list):
 
 
 def use_tukeys_method(a_df: pd.DataFrame, a_num_attr_list: list) -> (dict, dict):
-
-    print('\nUse Tukey\'s method to identify outliers:\n')
+    print('\nUse Tukey\'s method to identify outliers:')
 
     tukey_univariate_poss_outlier_dict = {}
     tukey_univariate_prob_outlier_dict = {}
     for attr in a_num_attr_list:
+        print('\n', '*' * 40, '\n')
         print('\n', attr)
         outliers_prob, outliers_poss = tukeys_method(a_df, attr)
         print('tukey\'s method - outliers_prob indices: ', outliers_prob)
@@ -180,7 +194,9 @@ def use_tukeys_method(a_df: pd.DataFrame, a_num_attr_list: list) -> (dict, dict)
 
 
 def check_out_univariate_outliers_in_cap_x(a_df, a_num_attr_list, show_outliers=False):
-    print('\nCheck out univariate outliers in cap_x:\n')
+    print('=' * 60)
+    print('Check out univariate outliers in cap_x:')
+    print('=' * 60)
 
     tukey_univariate_poss_outlier_dict, tukey_univariate_prob_outlier_dict = use_tukeys_method(a_df, a_num_attr_list)
 
@@ -195,8 +211,8 @@ def check_out_univariate_outliers_in_cap_x(a_df, a_num_attr_list, show_outliers=
             attrs_with_tukey_prob_outliers_list.append(attr)
             univariate_outlier_list.extend(outliers_prob)
 
-    print('\n', 20 * '*')
-    print('univariate outlier summary:')
+    print('\n', 40 * '*', '\n')
+    print('Univariate outlier summary:')
     print(f'\ncount of attributes with probable tukey univariate outliers:\n{len(attrs_with_tukey_prob_outliers_list)}')
     print(f'\nlist of attributes with probable tukey univariate outliers:\n{attrs_with_tukey_prob_outliers_list}')
     print(f'\ncount of unique probable tukey univariate outliers across all attributes:\n'
@@ -204,11 +220,9 @@ def check_out_univariate_outliers_in_cap_x(a_df, a_num_attr_list, show_outliers=
     if show_outliers:
         print(f'\nlist of observations with probable tukey univariate outliers:\n{set(univariate_outlier_list)}')
 
-    return tukey_univariate_poss_outlier_dict, tukey_univariate_prob_outlier_dict
-
 
 def mahalanobis_method(a_df: pd.DataFrame) -> (list, np.sqrt):
-    print('\nCompute Mahalanobis distance for observations to detect outliers: \n')
+    print('\nCompute Mahalanobis distance for observations to detect outliers:')
 
     # drop observations with nans
     a_df = drop_obs_with_nans(a_df)
@@ -236,10 +250,13 @@ def mahalanobis_method(a_df: pd.DataFrame) -> (list, np.sqrt):
 
 
 def check_out_multivariate_outliers_in_cap_x(a_df, a_num_attr_list, show_outliers=False):
-    print('\nCheck out multivariate outliers in cap_x:\n')
+    print('=' * 60)
+    print('Check out multivariate outliers in cap_x:')
+    print('=' * 60)
+
     outlier, _ = mahalanobis_method(a_df[a_num_attr_list])
 
-    print('\nmultivariate outlier summary:\n')
-    print(f'count of multivariate outliers using mahalanobis method: {len(outlier)}')
+    print('\nMultivariate outlier summary:')
+    print(f'Count of multivariate outliers using mahalanobis method: {len(outlier)}')
     if show_outliers:
-        print('\nmultivariate outliers using mahalanobis method:', outlier)
+        print('Multivariate outliers using mahalanobis method:', outlier)
