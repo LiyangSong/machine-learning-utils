@@ -111,15 +111,12 @@ def model_assess_with_bootstrapping(results_df, bs_train_cap_x_df, bs_train_y_df
     rmse_bs_results_df = pd.DataFrame(rmse_df_row_dict_list)
     rel_rmse_bs_results_df = pd.DataFrame(rel_rmse_df_row_dict_list)
 
-    plot_bootstrapping('rmse', rmse_bs_results_df)
-    plot_bootstrapping('relative_rmse', rel_rmse_bs_results_df)
-
     return rmse_bs_results_df, rel_rmse_bs_results_df
 
 
-def plot_bootstrapping(y_label, results_df):
+def plot_bootstrapping(y_label, results_df, title):
     sns.catplot(kind='box', x='estimator', y=y_label, data=results_df)
-    plt.title('assess model performance on the train set using bootstrapping')
+    plt.title(title)
     plt.xticks(rotation=90)
     plt.grid()
     plt.show()
