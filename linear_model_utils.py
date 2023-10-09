@@ -60,51 +60,69 @@ def score_trained_estimator(a_trained_estimator, a_cap_x_df, a_y_df):
     return mse, rmse, relative_rmse
 
 
-def model_assess_with_bootstrapping(a_best_model, a_num_bs_samples, a_train_cap_x_df, a_train_y_df, a_test_cap_x_df,
-                                    a_test_y_df, an_estimator_name, target_attr):
+def model_assess_with_bootstrapping(results_df, bs_train_cap_x_df, bs_train_y_df, bs_test_cap_x_df,
+                                    bs_test_y_df, target_attr, estimators, num_bs_samples=10):
     import warnings
     warnings.filterwarnings("ignore", message='')
 
     print('=' * 60)
-    print('Model assessment with bootstrapping:', an_estimator_name)
+    print('Model assessment with bootstrapping:')
     print('=' * 60)
 
-    # out of loop initialization
-    rmse_df_row_dict_list = []
-    rel_rmse_df_row_dict_list = []
-    for bs_sample_index in range(a_num_bs_samples):
-        # in loop initialization
-        rmse_df_row_dict = {}
-        rel_rmse_df_row_dict = {}
+    for i, estimator in enumerate(estimators):
+        best_estimator = results_df[results_df.estimator == estimator].best_estimator[i]
+        print('\n', '*' * 40)
+        estimator_name = 'tuned_elastic_net'
+        print('model assessment with bootstrapping on estimator:', estimator)
 
-        # get a bootstrap data frame
-        bs_cap_x_df = a_train_cap_x_df.sample(frac=1, replace=True, random_state=bs_sample_index)
-        bs_y_df = a_train_y_df.loc[bs_cap_x_df.index]
+        # out of loop initialization
+        rmse_df_row_dict_list = []
+        rel_rmse_df_row_dict_list = []
+        for bs_sample_index in range(num_bs_samples):
 
-        # clone the best model for fitting bootstrapped data frame
-        bs_best_model = clone(a_best_model)  # Construct a new unfitted estimator with the same hyper parameters.
+            # in loop initialization
+            rmse_df_row_dict = {}
+            rel_rmse_df_row_dict = {}
 
-        # fit the bootstrap model
-        bs_best_model.fit(bs_cap_x_df, bs_y_df[target_attr].array)
+            # get a bootstrap data frame
+            bs_cap_x_df = bs_train_cap_x_df.sample(frac=1, replace=True, random_state=bs_sample_index)
+            bs_y_df = bs_train_y_df.loc[bs_cap_x_df.index]
 
-        # document bootstrap model performance
-        mse, rmse, relative_rmse = score_trained_estimator(bs_best_model, a_test_cap_x_df, a_test_y_df)
+            # clone the best model for fitting bootstrapped data frame
+            bs_best_model = clone(best_estimator)  # Construct a new unfitted estimator with the same hyper parameters.
 
-        rmse_df_row_dict['estimator'] = an_estimator_name
-        rmse_df_row_dict['rmse'] = rmse
+            # fit the bootstrap model
+            bs_best_model.fit(bs_cap_x_df, bs_y_df[target_attr].values.ravel())
 
-        rel_rmse_df_row_dict['estimator'] = an_estimator_name
-        rel_rmse_df_row_dict['relative_rmse'] = relative_rmse
+            # document bootstrap model performance
+            mse, rmse, relative_rmse = score_trained_estimator(bs_best_model, bs_test_cap_x_df, bs_test_y_df)
 
-        # accumulate bootstrap model performance documentation
-        rmse_df_row_dict_list.append(rmse_df_row_dict.copy())
-        rel_rmse_df_row_dict_list.append(rel_rmse_df_row_dict.copy())
+            rmse_df_row_dict['estimator'] = estimator
+            rmse_df_row_dict['rmse'] = rmse
+
+            rel_rmse_df_row_dict['estimator'] = estimator
+            rel_rmse_df_row_dict['relative_rmse'] = relative_rmse
+
+            # accumulate bootstrap model performance documentation
+            rmse_df_row_dict_list.append(rmse_df_row_dict)
+            rel_rmse_df_row_dict_list.append(rel_rmse_df_row_dict)
 
     # convert accumulated bootstrap model performance into a data frame
     rmse_bs_results_df = pd.DataFrame(rmse_df_row_dict_list)
     rel_rmse_bs_results_df = pd.DataFrame(rel_rmse_df_row_dict_list)
 
+    plot_bootstrapping('rmse', rmse_bs_results_df)
+    plot_bootstrapping('relative_rmse', rel_rmse_bs_results_df)
+
     return rmse_bs_results_df, rel_rmse_bs_results_df
+
+
+def plot_bootstrapping(y_label, results_df):
+    sns.catplot(kind='box', x='estimator', y=y_label, data=results_df)
+    plt.title('assess model performance on the train set using bootstrapping')
+    plt.xticks(rotation=90)
+    plt.grid()
+    plt.show()
 
 
 def flexibility_plot(a_gs_cv_results, an_estimator_name):
@@ -196,11 +214,7 @@ def grid_search_bs(a_train_cap_x_df, a_train_y_df, target_attr, estimators, expe
 
         a_df_row_dict_list.append(a_df_row_dict.copy())
 
-    results_df = pd.DataFrame(a_df_row_dict_list)
-    print('\nresults_df:')
-    print(results_df)
-
-    return results_df
+    return pd.DataFrame(a_df_row_dict_list)
 
 
 def check_out_permutation_importance(results_df, train_cap_x_df, train_y_df, estimators):

@@ -23,7 +23,7 @@ def drop_na_target_obs(a_df: pd.DataFrame, target_attr: list) -> pd.DataFrame:
     return a_df
 
 
-def split_train_test_df(a_df: pd.DataFrame, test_size: float = 0.2, random_state: int = 42) -> (
+def split_train_test_df(a_df: pd.DataFrame, test_size: float = 0.2, random_state: int = 42, prefix='') -> (
         pd.DataFrame, pd.DataFrame):
     print('=' * 60)
     print('Split DataFrame into train and test set:')
@@ -43,8 +43,8 @@ def split_train_test_df(a_df: pd.DataFrame, test_size: float = 0.2, random_state
     print("test set:")
     print(a_test_cap_x_df.shape, a_test_y_df.shape)
 
-    save_df_to_csv(a_train_cap_x_df, a_train_y_df, 'train_df.csv')
-    save_df_to_csv(a_test_cap_x_df, a_test_y_df, 'test_df.csv')
+    save_df_to_csv(a_train_cap_x_df, a_train_y_df, prefix + 'train_df.csv')
+    save_df_to_csv(a_test_cap_x_df, a_test_y_df, prefix + 'test_df.csv')
 
     del a_test_cap_x_df, a_test_y_df
     return a_train_cap_x_df, a_train_y_df
